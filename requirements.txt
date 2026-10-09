@@ -1,0 +1,3 @@
+# Dependencies are declared in pyproject.toml; keep a single source of truth.
+# Run from the repository root: python -m pip install -r requirements.txt
+.

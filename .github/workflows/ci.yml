@@ -45,6 +45,20 @@ jobs:
         run: |
           python -c "import draft_predictor; print(draft_predictor.__file__)"
           python -m pip check
+      - name: Import machine-learning dependencies
+        run: |
+          python - <<'PY'
+          import importlib
+
+          modules = [
+              "numpy", "pandas", "scipy", "sklearn", "xgboost", "lightgbm",
+              "optuna", "joblib", "pyarrow", "matplotlib", "seaborn",
+              "requests", "dotenv", "tenacity", "tqdm",
+          ]
+          for module in modules:
+              importlib.import_module(module)
+              print(f"Imported {module}")
+          PY
       - name: Run tests when present
         run: |
           python - <<'PY'
