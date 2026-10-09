@@ -8,9 +8,9 @@ Predicting win rate from champion drafts in League of Legends.
 ## Status
 
 This repository currently provides the Python project scaffold, machine-learning
-dependencies, and development tooling. Data collection, model training, and
-prediction are not implemented yet. There is no trained model or prediction
-command to run.
+dependencies, development tooling, and placeholder training functions. Data
+collection, model training, and prediction are not implemented yet. There is no
+trained model or prediction command to run.
 
 ## Getting started
 
@@ -52,6 +52,40 @@ python -c "import draft_predictor; print(draft_predictor.__file__)"
 | `.github/` | CI, dependency updates, and contribution templates |
 | `pyproject.toml` | Package metadata and development tool configuration |
 | `requirements.txt` | Alternative pip entry point for runtime dependencies |
+
+## Training skeleton
+
+The training workflow is outlined in
+[`src/draft_predictor/train.py`](src/draft_predictor/train.py), with draft feature
+functions in [`src/draft_predictor/features.py`](src/draft_predictor/features.py).
+
+| Function | Intended responsibility |
+| --- | --- |
+| `load_data()` | Load and validate historical match records |
+| `split_data()` | Create chronological training, validation, and test splits |
+| `build_features()` | Convert champion drafts into model inputs |
+| `extract_target()` | Produce binary blue-team win labels |
+| `train_model()` | Fit preprocessing and a classifier on training data |
+| `evaluate_model()` | Evaluate predictions and win probabilities on held-out data |
+| `save_model()` | Save the fitted pipeline and its metadata |
+| `main()` | Connect the stages and parse training arguments |
+
+Each data or modeling function has a signature, a TODO docstring, and an explicit
+`NotImplementedError`. The command-line interface supports help:
+
+```bash
+python -m draft_predictor.train --help
+```
+
+The future training invocation is:
+
+```bash
+python -m draft_predictor.train --data data/processed/matches.parquet --output models/draft_predictor.joblib
+```
+
+It currently exits with a message naming the first unimplemented stage. It does
+not train or save a model. Implement the functions before using real match data;
+use validation data to select or tune the model before final test evaluation.
 
 ## Machine-learning dependencies
 

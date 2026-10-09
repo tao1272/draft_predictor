@@ -6,6 +6,8 @@ User-facing changes are recorded here, with the newest releases first.
 
 ### Added
 
+- Placeholder draft feature and training functions with type hints and TODOs.
+- A training command-line skeleton with help and explicit unimplemented-stage errors.
 - Core machine-learning dependencies for draft feature processing, classification,
   probability evaluation, tuning, plotting, and match-data collection.
 - Optional notebook, SHAP explanation, and PyTorch dependency groups.
