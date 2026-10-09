@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Lint
+        run: python -m ruff check --output-format=github .
+      - name: Check formatting
+        run: python -m ruff format --check .
+      - name: Check installed package and dependencies
+        run: |
+          python -c "import draft_predictor; print(draft_predictor.__file__)"
+          python -m pip check
+      - name: Run tests when present
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          test_files = list(Path("tests").rglob("test_*.py"))
+          test_files += list(Path("tests").rglob("*_test.py"))
+          if test_files:
+              subprocess.run([sys.executable, "-m", "pytest"], check=True)
+          else:
+              print("No test files yet; package installation and lint checks still run.")
+          PY
+
+  package:
+    name: Build and verify distributions
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version-file: .python-version
+      - name: Install build tools
+        run: python -m pip install ".[dev]"
+      - name: Build source distribution and wheel
+        run: python -m build
+      - name: Check distribution metadata
+        run: python -m twine check --strict dist/*
+      - name: Verify wheel in a clean environment
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/draft-predictor-wheel"
+          "$RUNNER_TEMP/draft-predictor-wheel/bin/python" -m pip install dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/draft-predictor-wheel/bin/python" -c "import draft_predictor; print(draft_predictor.__file__)"
